@@ -1,84 +1,50 @@
-// import { defineConfig } from "vite";
-// import path from "path";
-// import tailwindcss from "@tailwindcss/vite";
-// import react from "@vitejs/plugin-react";
-
-// function figmaAssetResolver() {
-//   return {
-//     name: "figma-asset-resolver",
-//     resolveId(id: string) {
-//       if (id.startsWith("figma:asset/")) {
-//         const filename = id.replace("figma:asset/", "");
-//         return path.resolve(__dirname, "src/assets", filename);
-//       }
-//     },
-//   };
-// }
-
-// export default defineConfig({
-//   plugins: [
-//     figmaAssetResolver(),
-//     // The React and Tailwind plugins are both required for Make, even if
-//     // Tailwind is not being actively used – do not remove them
-//     react(),
-//     tailwindcss(),
-//   ],
-//   resolve: {
-//     alias: {
-//       // Alias @ to the src directory
-//       "@": path.resolve(__dirname, "./src"),
-//     },
-//   },
-
-//   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
-//   assetsInclude: ["**/*.svg", "**/*.csv"],
-// });
-
 import { defineConfig } from "vite";
 import path from "path";
+import { fileURLToPath } from "url"; // Required for ESM __dirname equivalent
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 
-// Custom resolver for Figma assets
+// Fix for __dirname in ESM (Node.js modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 function figmaAssetResolver() {
   return {
     name: "figma-asset-resolver",
     resolveId(id: string) {
       if (id.startsWith("figma:asset/")) {
         const filename = id.replace("figma:asset/", "");
+        // Use path.join for safer cross-platform pathing
         return path.resolve(__dirname, "src/assets", filename);
       }
+      return null; // Return null so other plugins can handle it
     },
   };
 }
 
 export default defineConfig({
-  plugins: [
-    figmaAssetResolver(),
-    // React and Tailwind plugins are required for Make — do not remove them
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [figmaAssetResolver(), react(), tailwindcss()],
   resolve: {
     alias: {
-      // Alias @ to the src directory
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // File types to support raw imports. Never add .css, .tsx, or .ts files here.
+  // Ensure your custom assets are included
   assetsInclude: ["**/*.svg", "**/*.csv"],
 
-  // ✅ Explicit build configuration for Vercel
   build: {
-    outDir: "dist", // Vercel will serve files from this folder
-    assetsDir: "assets", // keeps assets organized
-    sourcemap: false, // optional: disable source maps for production
-    emptyOutDir: true, // clears old builds before new ones
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false,
+    emptyOutDir: true,
+    // Ensure the module polyfill is handled if targeting older browsers
+    modulePreload: true,
   },
 
-  // ✅ Optional server config for local development
   server: {
     port: 5173,
     open: true,
+    // Ensure strict port is off or on depending on your env
+    strictPort: false,
   },
 });
