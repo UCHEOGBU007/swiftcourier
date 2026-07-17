@@ -294,7 +294,7 @@ export function Footer() {
             </p>
             <p className="text-slate-600">
               Architecture by{" "}
-              <span className="text-orange-500/80">Mr Smith</span>
+              <span className="text-orange-500/80">T-Solusions Group</span>
             </p>
           </div>
         </div>
